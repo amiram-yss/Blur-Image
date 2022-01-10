@@ -28,12 +28,13 @@ int calcIndex(int i, int j, int n) {
 
 /*
  * initialize_pixel_sum - Initializes all fields of sum to 0
+ * NO NEEDED AFTER OPTIMIZATION.
  */
-void initialize_pixel_sum(pixel_sum *sum) {
+/*void initialize_pixel_sum(pixel_sum *sum) {
 	sum->red = sum->green = sum->blue = 0;
 	// sum->num = 0;
 	return;
-}
+}*/
 
 /*
  * assign_sum_to_pixel - Truncates pixel's new value to match the range [0,255]
@@ -68,55 +69,76 @@ static void sum_pixels_by_weight(pixel_sum *sum, pixel p, int weight) {
  */
 static pixel applyKernel (int dim, int i, int j, pixel *src, int kernel[KERNEL_SIZE][KERNEL_SIZE], int kernelScale, bool filter) {
 
-	int ii, jj;
-	pixel_sum sum;
+    int kRow, kCol, ii, jj;
+    //INITIALIZING STRUCT USING INIT LIST. MINOR EFFECT
+	pixel_sum sum = {0, 0, 0};
 	pixel current_pixel;
 	int min_intensity = 766; // arbitrary value that is higher than maximum possible intensity, which is 255*3=765
 	int max_intensity = -1; // arbitrary value that is lower than minimum possible intensity, which is 0
 	int min_row, min_col, max_row, max_col;
 	pixel loop_pixel;
 
-	initialize_pixel_sum(&sum);
-
+	//initialize_pixel_sum(&sum);
     //INSTEAD OF DOING THE SAME CALC ALL OVER AND OVER
     int iLoopCounter = min(i+1, dim-1);
     int jLoopCounter = min(j+1, dim-1);
+    //AVOIDED SCANNING MATRIX TWICE BY COPING LOOP'S CONTEXT INTO THE NEXT LOOP
+    //AND AVOIDING UNNECESSARY SCANS.
+    if(!filter) {
+        for(ii = max(i-1, 0); ii <= iLoopCounter; ++ii) {
+            for(jj = max(j-1, 0); jj <= jLoopCounter; ++jj) {
 
-	for(ii = max(i-1, 0); ii <= iLoopCounter; ++ii) {
-		for(jj = max(j-1, 0); jj <= jLoopCounter; ++jj) {
+                // compute row index in kernel
+                if (ii < i) {
+                    kRow = 0;
+                } else if (ii > i) {
+                    kRow = 2;
+                } else {
+                    kRow = 1;
+                }
 
-			int kRow, kCol;
+                // compute column index in kernel
+                if (jj < j) {
+                    kCol = 0;
+                } else if (jj > j) {
+                    kCol = 2;
+                } else {
+                    kCol = 1;
+                }
 
-			// compute row index in kernel
-			if (ii < i) {
-				kRow = 0;
-			} else if (ii > i) {
-				kRow = 2;
-			} else {
-				kRow = 1;
-			}
-
-			// compute column index in kernel
-			if (jj < j) {
-				kCol = 0;
-			} else if (jj > j) {
-				kCol = 2;
-			} else {
-				kCol = 1;
-			}
-
-			// apply kernel on pixel at [ii,jj]
-			sum_pixels_by_weight(&sum, src[calcIndex(ii, jj, dim)], kernel[kRow][kCol]);
-		}
+                // apply kernel on pixel at [ii,jj]
+                sum_pixels_by_weight(&sum, src[calcIndex(ii, jj, dim)], kernel[kRow][kCol]);
+            }
+        }
 	}
 
-    iLoopCounter = min(i+1, dim-1);
-    jLoopCounter = min(j+1, dim-1);
+/*    iLoopCounter = min(i+1, dim-1);
+    jLoopCounter = min(j+1, dim-1);*/
 
-	if (filter) {
+	else {
 		// find min and max coordinates
 		for(ii = max(i-1, 0); ii <= iLoopCounter; ii++) {
 			for(jj = max(j-1, 0); jj <= jLoopCounter; jj++) {
+                // compute row index in kernel
+                if (ii < i) {
+                    kRow = 0;
+                } else if (ii > i) {
+                    kRow = 2;
+                } else {
+                    kRow = 1;
+                }
+
+                // compute column index in kernel
+                if (jj < j) {
+                    kCol = 0;
+                } else if (jj > j) {
+                    kCol = 2;
+                } else {
+                    kCol = 1;
+                }
+
+                // apply kernel on pixel at [ii,jj]
+                sum_pixels_by_weight(&sum, src[calcIndex(ii, jj, dim)], kernel[kRow][kCol]);
 				// check if smaller than min or higher than max and update
 				loop_pixel = src[calcIndex(ii, jj, dim)];
 				if ((((int) loop_pixel.red) + ((int) loop_pixel.green) + ((int) loop_pixel.blue)) <= min_intensity) {
