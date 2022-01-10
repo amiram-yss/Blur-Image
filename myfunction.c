@@ -40,11 +40,11 @@ int calcIndex(int i, int j, int n) {
  * assign_sum_to_pixel - Truncates pixel's new value to match the range [0,255]
  */
 static void assign_sum_to_pixel(pixel *current_pixel, pixel_sum sum, int kernelScale) {
-
+    //WHY / = ../.. WHEN WE HAVE /=?!
 	// divide by kernel's weight
 	sum.red /= kernelScale;
-	sum.green = sum.green / kernelScale;
-	sum.blue = sum.blue / kernelScale;
+	sum.green /= kernelScale;
+	sum.blue /= kernelScale;
 
 	// truncate each pixel's color values to match the range [0,255]
 	current_pixel->red = (unsigned char) (min(max(sum.red, 0), 255));
@@ -202,7 +202,8 @@ void charsToPixels(Image *charsImg, pixel* pixels) {
     // = pixels[i].red = image->data[3*(i)];
     int iterations = m * n, curPos = 0;
     char *dataPtr = image -> data;
-    for (int i = 0; i < iterations; i++) {
+    int i;
+    for (i = 0; i < iterations; i++) {
         pixels[i].red = *dataPtr;
         ++dataPtr;
         pixels[i].green = *dataPtr;
@@ -226,7 +227,8 @@ void pixelsToChars(pixel* pixels, Image *charsImg) {
     // SIMILAR OPTIMIZATION TO CHARS_TO_PIXELS(...)
     int iterations = m * n, curPos = 0;
     char *dataPtr = image -> data;
-    for (int i = 0; i < iterations; i++) {
+    int i;
+    for (i = 0; i < iterations; i++) {
         *dataPtr = pixels[i].red;
         ++dataPtr;
         *dataPtr = pixels[i].green;
