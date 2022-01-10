@@ -4,9 +4,9 @@
 #define KERNEL_SIZE                     3
 #define HALF_KERNEL_SIZE                1 //KERNEL_SIZE/2
 //AVOID UNNECESSARY CALLS FOR A FUNC WITH OVER 40,000,000 CALLS LOL
-#define min(a,b) ((a) < (b) ? (a) : (b))
-#define max(a,b) ((a) > (b) ? (a) : (b))
-
+#define min(a,b)                        ((a) < (b) ? (a) : (b))
+#define max(a,b)                        ((a) > (b) ? (a) : (b))
+#define calcIndex(i,j,n)                (((i) * (n)) + (j))
 
 typedef struct {
    unsigned char red;
@@ -22,9 +22,9 @@ typedef struct {
 } pixel_sum;
 
 
-int calcIndex(int i, int j, int n) {
+/*int calcIndex(int i, int j, int n) {
 	return ((i)*(n)+(j));
-}
+}*/
 
 /*
  * initialize_pixel_sum - Initializes all fields of sum to 0
