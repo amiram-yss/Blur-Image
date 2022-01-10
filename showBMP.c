@@ -80,7 +80,7 @@ void optimize(Image* image, char flag) {
 	startTime = ru.ru_utime;
 //myfunction(image, picName, blurRsltImgName, sharpRsltImgName, filteredBlurRsltImgName, filteredSharpRsltImgName, flag);
 	myfunction(image, picName, blurRsltImgName, sharpRsltImgName, filteredBlurRsltImgName, filteredSharpRsltImgName, 1);
-    myfunction(image, picName, blurRsltImgName, sharpRsltImgName, filteredBlurRsltImgName, filteredSharpRsltImgName, 2);
+    /*myfunction(image, picName, blurRsltImgName, sharpRsltImgName, filteredBlurRsltImgName, filteredSharpRsltImgName, 2);
     myfunction(image, picName, blurRsltImgName, sharpRsltImgName, filteredBlurRsltImgName, filteredSharpRsltImgName, 1);
     myfunction(image, picName, blurRsltImgName, sharpRsltImgName, filteredBlurRsltImgName, filteredSharpRsltImgName, 2);
     myfunction(image, picName, blurRsltImgName, sharpRsltImgName, filteredBlurRsltImgName, filteredSharpRsltImgName, 1);
@@ -99,13 +99,13 @@ void optimize(Image* image, char flag) {
     myfunction(image, picName, blurRsltImgName, sharpRsltImgName, filteredBlurRsltImgName, filteredSharpRsltImgName, 2);
     myfunction(image, picName, blurRsltImgName, sharpRsltImgName, filteredBlurRsltImgName, filteredSharpRsltImgName, 1);
     myfunction(image, picName, blurRsltImgName, sharpRsltImgName, filteredBlurRsltImgName, filteredSharpRsltImgName, 2);
-
+*/
 	getrusage(RUSAGE_SELF, &ru); // end timer
 	endTime = ru.ru_utime;
 	double tS = startTime.tv_sec * 1000000.0 + (startTime.tv_usec);
 	double tE = endTime.tv_sec * 1000000.0 + (endTime.tv_usec);
 	//printf("Total runtime: %f ms\n", (tE - tS) / 1000.0);
-    double delta = (double)((tE-tS)/20);
+    double delta = (double)((tE-tS));///20);
     printf("Total runtime avg: %f ms\n", (delta / 1000.0));
 }
 

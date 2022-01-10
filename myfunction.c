@@ -1,5 +1,13 @@
-#include <stdbool.h> 
-#define KERNEL_SIZE 3
+#include <stdbool.h>
+#include <stdlib.h>
+// AVOIDING CALCULATIONS FOR KNOWN SIZES AND FREQUENT CALCULATIONS BY SETTING AS CONSTS.
+#define KERNEL_SIZE                     3
+#define HALF_KERNEL_SIZE                1 //KERNEL_SIZE/2
+//AVOID UNNECESSARY CALLS FOR A FUNC WITH OVER 40,000,000 CALLS LOL
+#define min(a,b) ((a) < (b) ? (a) : (b))
+#define max(a,b) ((a) > (b) ? (a) : (b))
+
+
 typedef struct {
    unsigned char red;
    unsigned char green;
@@ -13,10 +21,6 @@ typedef struct {
     // int num;
 } pixel_sum;
 
-
-/* Compute min and max of two integers, respectively */
-int min(int a, int b) { return (a < b ? a : b); }
-int max(int a, int b) { return (a > b ? a : b); }
 
 int calcIndex(int i, int j, int n) {
 	return ((i)*(n)+(j));
@@ -65,7 +69,6 @@ static void sum_pixels_by_weight(pixel_sum *sum, pixel p, int weight) {
 static pixel applyKernel (int dim, int i, int j, pixel *src, int kernel[KERNEL_SIZE][KERNEL_SIZE], int kernelScale, bool filter) {
 
 	int ii, jj;
-	int currRow, currCol;
 	pixel_sum sum;
 	pixel current_pixel;
 	int min_intensity = 766; // arbitrary value that is higher than maximum possible intensity, which is 255*3=765
@@ -75,8 +78,12 @@ static pixel applyKernel (int dim, int i, int j, pixel *src, int kernel[KERNEL_S
 
 	initialize_pixel_sum(&sum);
 
-	for(ii = max(i-1, 0); ii <= min(i+1, dim-1); ++ii) {
-		for(jj = max(j-1, 0); jj <= min(j+1, dim-1); ++jj) {
+    //INSTEAD OF DOING THE SAME CALC ALL OVER AND OVER
+    int iLoopCounter = min(i+1, dim-1);
+    int jLoopCounter = min(j+1, dim-1);
+
+	for(ii = max(i-1, 0); ii <= iLoopCounter; ++ii) {
+		for(jj = max(j-1, 0); jj <= jLoopCounter; ++jj) {
 
 			int kRow, kCol;
 
@@ -103,10 +110,13 @@ static pixel applyKernel (int dim, int i, int j, pixel *src, int kernel[KERNEL_S
 		}
 	}
 
+    iLoopCounter = min(i+1, dim-1);
+    jLoopCounter = min(j+1, dim-1);
+
 	if (filter) {
 		// find min and max coordinates
-		for(ii = max(i-1, 0); ii <= min(i+1, dim-1); ii++) {
-			for(jj = max(j-1, 0); jj <= min(j+1, dim-1); jj++) {
+		for(ii = max(i-1, 0); ii <= iLoopCounter; ii++) {
+			for(jj = max(j-1, 0); jj <= jLoopCounter; jj++) {
 				// check if smaller than min or higher than max and update
 				loop_pixel = src[calcIndex(ii, jj, dim)];
 				if ((((int) loop_pixel.red) + ((int) loop_pixel.green) + ((int) loop_pixel.blue)) <= min_intensity) {
@@ -139,8 +149,8 @@ static pixel applyKernel (int dim, int i, int j, pixel *src, int kernel[KERNEL_S
 void smooth(int dim, pixel *src, pixel *dst, int kernel[KERNEL_SIZE][KERNEL_SIZE], int kernelScale, bool filter) {
 
 	int i, j;
-	for (i = KERNEL_SIZE / 2 ; i < dim - KERNEL_SIZE / 2; i++) {
-		for (j =  KERNEL_SIZE / 2 ; j < dim - KERNEL_SIZE / 2 ; j++) {
+	for (i = HALF_KERNEL_SIZE ; i < dim - HALF_KERNEL_SIZE; i++) {
+		for (j =  HALF_KERNEL_SIZE ; j < dim - HALF_KERNEL_SIZE ; j++) {
 			dst[calcIndex(i, j, dim)] = applyKernel(dim, i, j, src, kernel, kernelScale, filter);
 		}
 	}
@@ -162,9 +172,8 @@ void charsToPixels(Image *charsImg, pixel* pixels) {
 void pixelsToChars(pixel* pixels, Image *charsImg) {
 
 	int row, col;
-	for (row = 0 ; row < m ; row++) {
-		for (col = 0 ; col < n ; col++) {
-
+	for (row = 0 ; row < m ; ++row) {
+		for (col = 0 ; col < n ; ++col) {
 			image->data[3*row*n + 3*col] = pixels[row*n + col].red;
 			image->data[3*row*n + 3*col + 1] = pixels[row*n + col].green;
 			image->data[3*row*n + 3*col + 2] = pixels[row*n + col].blue;
@@ -174,13 +183,14 @@ void pixelsToChars(pixel* pixels, Image *charsImg) {
 
 void copyPixels(pixel* src, pixel* dst) {
 
-	int row, col;
+	int row, col, add;
 	for (row = 0 ; row < m ; row++) {
 		for (col = 0 ; col < n ; col++) {
-
-			dst[row*n + col].red = src[row*n + col].red;
-			dst[row*n + col].green = src[row*n + col].green;
-			dst[row*n + col].blue = src[row*n + col].blue;
+            // CALC ROW*N+COL ONCE, INSTEAD OF 6 TIMES. SEEMS AS MINOR UPDATE. (1)
+            add = row * n + col;
+			dst[add].red = src[add].red;
+			dst[add].green = src[add].green;
+			dst[add].blue = src[add].blue;
 		}
 	}
 }
