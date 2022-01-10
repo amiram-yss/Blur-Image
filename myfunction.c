@@ -42,7 +42,7 @@ int calcIndex(int i, int j, int n) {
 static void assign_sum_to_pixel(pixel *current_pixel, pixel_sum sum, int kernelScale) {
 
 	// divide by kernel's weight
-	sum.red = sum.red / kernelScale;
+	sum.red /= kernelScale;
 	sum.green = sum.green / kernelScale;
 	sum.blue = sum.blue / kernelScale;
 
@@ -57,9 +57,11 @@ static void assign_sum_to_pixel(pixel *current_pixel, pixel_sum sum, int kernelS
 * sum_pixels_by_weight - Sums pixel values, scaled by given weight
 */
 static void sum_pixels_by_weight(pixel_sum *sum, pixel p, int weight) {
+
 	sum->red += ((int) p.red) * weight;
 	sum->green += ((int) p.green) * weight;
 	sum->blue += ((int) p.blue) * weight;
+
 	// sum->num++;
 	return;
 }
@@ -181,26 +183,57 @@ void smooth(int dim, pixel *src, pixel *dst, int kernel[KERNEL_SIZE][KERNEL_SIZE
 void charsToPixels(Image *charsImg, pixel* pixels) {
 
 	int row, col;
-	for (row = 0 ; row < m ; row++) {
+	/*for (row = 0 ; row < m ; row++) {
 		for (col = 0 ; col < n ; col++) {
 
 			pixels[row*n + col].red = image->data[3*row*n + 3*col];
 			pixels[row*n + col].green = image->data[3*row*n + 3*col + 1];
 			pixels[row*n + col].blue = image->data[3*row*n + 3*col + 2];
 		}
-	}
+	}*/
+    // CONVERTING:
+    // pixels[row*n + col].red = image->data[3*row*n + 3*col];
+    // = pixels[row*n + col].red = image->data[3*(row*n + col)];
+    // TOTAL: RUNS N * M TIMES.
+    // BASICALLY IT GOES THROUGH EACH INT IN RANGE 0 TO M * N
+    // LET i BE (row * n + col)
+    // SUCH THAT:
+    // pixels[row*n + col].red = image->data[3*row*n + 3*col]
+    // = pixels[i].red = image->data[3*(i)];
+    int iterations = m * n, curPos = 0;
+    char *dataPtr = image -> data;
+    for (int i = 0; i < iterations; i++) {
+        pixels[i].red = *dataPtr;
+        ++dataPtr;
+        pixels[i].green = *dataPtr;
+        ++dataPtr;
+        pixels[i].blue = *dataPtr;
+        ++dataPtr;
+    }
+
 }
 
 void pixelsToChars(pixel* pixels, Image *charsImg) {
 
 	int row, col;
-	for (row = 0 ; row < m ; ++row) {
+	/*for (row = 0 ; row < m ; ++row) {
 		for (col = 0 ; col < n ; ++col) {
 			image->data[3*row*n + 3*col] = pixels[row*n + col].red;
 			image->data[3*row*n + 3*col + 1] = pixels[row*n + col].green;
 			image->data[3*row*n + 3*col + 2] = pixels[row*n + col].blue;
 		}
-	}
+	}*/
+    // SIMILAR OPTIMIZATION TO CHARS_TO_PIXELS(...)
+    int iterations = m * n, curPos = 0;
+    char *dataPtr = image -> data;
+    for (int i = 0; i < iterations; i++) {
+        *dataPtr = pixels[i].red;
+        ++dataPtr;
+        *dataPtr = pixels[i].green;
+        ++dataPtr;
+        *dataPtr = pixels[i].blue;
+        ++dataPtr;
+    }
 }
 
 void copyPixels(pixel* src, pixel* dst) {
