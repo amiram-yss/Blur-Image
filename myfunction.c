@@ -69,7 +69,7 @@ static void sum_pixels_by_weight(pixel_sum *sum, pixel p, int weight) {
 /*
  *  Applies kernel for pixel at (i,j)
  */
-static pixel applyKernel (int dim, int i, int j, pixel *src, int kernel[KERNEL_SIZE][KERNEL_SIZE], int kernelScale, bool filter) {
+static pixel applyKernel (int dim, int i, int j, pixel *src, int kernel[KERNEL_SIZE][KERNEL_SIZE], int kernelScale, bool filter, bool isBlur) {
 
     int kRow, kCol, ii, jj;
     //INITIALIZING STRUCT USING INIT LIST. MINOR EFFECT
@@ -110,6 +110,7 @@ static pixel applyKernel (int dim, int i, int j, pixel *src, int kernel[KERNEL_S
 
                 // apply kernel on pixel at [ii,jj]
                 sum_pixels_by_weight(&sum, src[calcIndex(ii, jj, dim)], kernel[kRow][kCol]);
+
             }
         }
 	}
@@ -140,7 +141,11 @@ static pixel applyKernel (int dim, int i, int j, pixel *src, int kernel[KERNEL_S
                 }
 
                 // apply kernel on pixel at [ii,jj]
-                sum_pixels_by_weight(&sum, src[calcIndex(ii, jj, dim)], kernel[kRow][kCol]);
+                //sum_pixels_by_weight(&sum, src[calcIndex(ii, jj, dim)], 1);
+                //SUM THE CURR PIX VALUES IN THE SPOT WITHOUT UNNECESSARY CALCULATIONS.
+                sum.red += src[calcIndex(ii,jj,dim)].red;//((int) p.red);
+                sum.green += src[calcIndex(ii,jj,dim)].green;//((int) p.green);
+                sum.blue += src[calcIndex(ii,jj,dim)].blue;//((int) p.blue);
 				// check if smaller than min or higher than max and update
 				loop_pixel = src[calcIndex(ii, jj, dim)];
 				if ((((int) loop_pixel.red) + ((int) loop_pixel.green) + ((int) loop_pixel.blue)) <= min_intensity) {
@@ -170,12 +175,12 @@ static pixel applyKernel (int dim, int i, int j, pixel *src, int kernel[KERNEL_S
 * Ignore pixels where the kernel exceeds bounds. These are pixels with row index smaller than kernelSize/2 and/or
 * column index smaller than kernelSize/2
 */
-void smooth(int dim, pixel *src, pixel *dst, int kernel[KERNEL_SIZE][KERNEL_SIZE], int kernelScale, bool filter) {
+void smooth(int dim, pixel *src, pixel *dst, int kernel[KERNEL_SIZE][KERNEL_SIZE], int kernelScale, bool filter, bool isBlur) {
 
 	int i, j;
 	for (i = HALF_KERNEL_SIZE ; i < dim - HALF_KERNEL_SIZE; i++) {
 		for (j =  HALF_KERNEL_SIZE ; j < dim - HALF_KERNEL_SIZE ; j++) {
-			dst[calcIndex(i, j, dim)] = applyKernel(dim, i, j, src, kernel, kernelScale, filter);
+			dst[calcIndex(i, j, dim)] = applyKernel(dim, i, j, src, kernel, kernelScale, filter, isBlur);
 		}
 	}
 }
@@ -252,7 +257,7 @@ void copyPixels(pixel* src, pixel* dst) {
 	}
 }
 
-void doConvolution(Image *image, int kernel[KERNEL_SIZE][KERNEL_SIZE], int kernelScale, bool filter) {
+void doConvolution(Image *image, int kernel[KERNEL_SIZE][KERNEL_SIZE], int kernelScale, bool filter, bool isBlur) {
 
 	pixel* pixelsImg = malloc(m*n*sizeof(pixel));
 	pixel* backupOrg = malloc(m*n*sizeof(pixel));
@@ -260,7 +265,7 @@ void doConvolution(Image *image, int kernel[KERNEL_SIZE][KERNEL_SIZE], int kerne
 	charsToPixels(image, pixelsImg);
 	copyPixels(pixelsImg, backupOrg);
 
-	smooth(m, backupOrg, pixelsImg, kernel, kernelScale, filter);
+	smooth(m, backupOrg, pixelsImg, kernel, kernelScale, filter, isBlur);
 
 	pixelsToChars(pixelsImg, image);
 
@@ -286,25 +291,25 @@ void myfunction(Image *image, char* srcImgpName, char* blurRsltImgName, char* sh
 
 	if (flag == '1') {	
 		// blur image
-		doConvolution(image, blurKernel, 9, false);
+		doConvolution(image, blurKernel, 9, false, true);
 
 		// write result image to file
 		writeBMP(image, srcImgpName, blurRsltImgName);	
 
 		// sharpen the resulting image
-		doConvolution(image, sharpKernel, 1, false);
+		doConvolution(image, sharpKernel, 1, false, false);
 		
 		// write result image to file
 		writeBMP(image, srcImgpName, sharpRsltImgName);	
 	} else {
 		// apply extermum filtered kernel to blur image
-		doConvolution(image, blurKernel, 7, true);
+		doConvolution(image, blurKernel, 7, true ,true);
 
 		// write result image to file
 		writeBMP(image, srcImgpName, filteredBlurRsltImgName);
 
 		// sharpen the resulting image
-		doConvolution(image, sharpKernel, 1, false);
+		doConvolution(image, sharpKernel, 1, false, false);
 
 		// write result image to file
 		writeBMP(image, srcImgpName, filteredSharpRsltImgName);	
