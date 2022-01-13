@@ -161,8 +161,14 @@ static pixel applyKernel (int dim, int i, int j, pixel *src, int kernel[KERNEL_S
 			}
 		}
 		// filter out min and max
-		sum_pixels_by_weight(&sum, src[calcIndex(min_row, min_col, dim)], -1);
-		sum_pixels_by_weight(&sum, src[calcIndex(max_row, max_col, dim)], -1);
+		/*sum_pixels_by_weight(&sum, src[calcIndex(min_row, min_col, dim)], -1);
+		sum_pixels_by_weight(&sum, src[calcIndex(max_row, max_col, dim)], -1);*/
+        sum.red -= src[calcIndex(min_row,min_col,dim)].red;//((int) p.red);
+        sum.green -= src[calcIndex(min_row,min_col,dim)].green;//((int) p.green);
+        sum.blue -= src[calcIndex(min_row,min_col,dim)].blue;//((int) p.blue);
+        sum.red -= src[calcIndex(min_row,min_col,dim)].red;//((int) p.red);
+        sum.green -= src[calcIndex(min_row,min_col,dim)].green;//((int) p.green);
+        sum.blue -= src[calcIndex(min_row,min_col,dim)].blue;//((int) p.blue);
 	}
 
 	// assign kernel's result to pixel at [i,j]
