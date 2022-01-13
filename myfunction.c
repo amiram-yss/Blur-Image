@@ -86,31 +86,72 @@ static pixel applyKernel (int dim, int i, int j, pixel *src, int kernel[KERNEL_S
     int jLoopCounter = min(j+1, dim-1);
     //AVOIDED SCANNING MATRIX TWICE BY COPING LOOP'S CONTEXT INTO THE NEXT LOOP
     //AND AVOIDING UNNECESSARY SCANS.
+    //NO FILTERS CAN'T TELL US IF BLUR OR SHARPENING
     if(!filter) {
-        for(ii = max(i-1, 0); ii <= iLoopCounter; ++ii) {
-            for(jj = max(j-1, 0); jj <= jLoopCounter; ++jj) {
+        if(isBlur) {
+            for(ii = max(i-1, 0); ii <= iLoopCounter; ++ii) {
+                for(jj = max(j-1, 0); jj <= jLoopCounter; ++jj) {
 
-                // compute row index in kernel
-                if (ii < i) {
-                    kRow = 0;
-                } else if (ii > i) {
-                    kRow = 2;
-                } else {
-                    kRow = 1;
+                    // compute row index in kernel
+                    if (ii < i) {
+                        kRow = 0;
+                    } else if (ii > i) {
+                        kRow = 2;
+                    } else {
+                        kRow = 1;
+                    }
+
+                    // compute column index in kernel
+                    if (jj < j) {
+                        kCol = 0;
+                    } else if (jj > j) {
+                        kCol = 2;
+                    } else {
+                        kCol = 1;
+                    }
+
+                    // apply kernel on pixel at [ii,jj]
+                    //sum_pixels_by_weight(&sum, src[calcIndex(ii, jj, dim)], kernel[kRow][kCol]);
+                    sum.red += src[calcIndex(ii,jj,dim)].red;//((int) p.red);
+                    sum.green += src[calcIndex(ii,jj,dim)].green;//((int) p.green);
+                    sum.blue += src[calcIndex(ii,jj,dim)].blue;//((int) p.blue);
                 }
+            }
+        } else {
+            //MEANS SHARPENING
+            for(ii = max(i-1, 0); ii <= iLoopCounter; ++ii) {
+                for(jj = max(j-1, 0); jj <= jLoopCounter; ++jj) {
 
-                // compute column index in kernel
-                if (jj < j) {
-                    kCol = 0;
-                } else if (jj > j) {
-                    kCol = 2;
-                } else {
-                    kCol = 1;
+                    // compute row index in kernel
+                    if (ii < i) {
+                        kRow = 0;
+                    } else if (ii > i) {
+                        kRow = 2;
+                    } else {
+                        kRow = 1;
+                    }
+
+                    // compute column index in kernel
+                    if (jj < j) {
+                        kCol = 0;
+                    } else if (jj > j) {
+                        kCol = 2;
+                    } else {
+                        kCol = 1;
+                    }
+
+                    // apply kernel on pixel at [ii,jj]
+                    //sum_pixels_by_weight(&sum, src[calcIndex(ii, jj, dim)], kernel[kRow][kCol]);
+                    if (ii == i && jj == j) {
+                        sum.red += 9 * src[calcIndex(ii, jj, dim)].red;//((int) p.red);
+                        sum.green += 9 * src[calcIndex(ii, jj, dim)].green;//((int) p.green);
+                        sum.blue += 9 * src[calcIndex(ii, jj, dim)].blue;//((int) p.blue);
+                    } else {
+                        sum.red -= src[calcIndex(ii,jj,dim)].red;//((int) p.red);
+                        sum.green -= src[calcIndex(ii,jj,dim)].green;//((int) p.green);
+                        sum.blue-= src[calcIndex(ii,jj,dim)].blue;//((int) p.blue);
+                    }
                 }
-
-                // apply kernel on pixel at [ii,jj]
-                sum_pixels_by_weight(&sum, src[calcIndex(ii, jj, dim)], kernel[kRow][kCol]);
-
             }
         }
 	}
@@ -118,6 +159,7 @@ static pixel applyKernel (int dim, int i, int j, pixel *src, int kernel[KERNEL_S
 /*    iLoopCounter = min(i+1, dim-1);
     jLoopCounter = min(j+1, dim-1);*/
 
+    // HAVING A FILTER MEANS BLUR
 	else {
 		// find min and max coordinates
 		for(ii = max(i-1, 0); ii <= iLoopCounter; ii++) {
